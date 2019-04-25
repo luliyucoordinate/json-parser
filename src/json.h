@@ -5,6 +5,7 @@ typedef enum {JSON_NULL, JSON_FALSE, JSON_TRUE, JSON_NUMBER, JSON_STRING, JSON_A
 
 typedef struct 
 {
+    double n;
     json_type type;
 }json_value;
 
