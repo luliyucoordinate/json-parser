@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
+#include <errno.h>
 #include "json.h"
 
 #define EXPECT(c, ch)   do {assert(*c->json == (ch)); c->json++;} while(0)
@@ -20,12 +22,30 @@ static void json_parse_whitespace(json_context* c)
 }
 
 static int json_parse_number(json_context* c, json_value* v) {
-    char* end;
+    const char* p = c->json;
+    if (*p == '-') p++;
+    if (*p == '0') p++;
+    else {
+        if (!ISDIGIT1TO9(*p)) return JSON_PARSE_INVALID_VALUE;
+        for (p++; ISDIGIT(*p); p++);
+    }
+    if (*p == '.') {
+        p++;
+        if (!ISDIGIT(*p)) return JSON_PARSE_INVALID_VALUE;
+        for (p++; ISDIGIT(*p); p++);
+    }
+    if (*p == 'e' || *p == 'E') {
+        p++;
+        if (*p == '+' || *p == '-') p++;
+        if (!ISDIGIT(*p)) return JSON_PARSE_INVALID_VALUE;
+        for (p++; ISDIGIT(*p); p++);
+    }
+    errno = 0;
     /* \TODO validate number */
-    v->n = strtod(c->json, &end);
-    if (c->json == end)
-        return JSON_PARSE_INVALID_VALUE;
-    c->json = end;
+    v->u.n = strtod(c->json, NULL);
+    if (errno == ERANGE && (v->u.n == HUGE_VAL || v->u.n == -HUGE_VAL))
+        return JSON_PARSE_NUMBER_TOO_BIG;
+    c->json = p;
     v->type = JSON_NUMBER;
     return JSON_PARSE_OK;
 }
