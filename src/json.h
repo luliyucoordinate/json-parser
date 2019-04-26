@@ -3,12 +3,8 @@
 
 typedef enum {JSON_NULL, JSON_FALSE, JSON_TRUE, JSON_NUMBER, JSON_STRING, JSON_ARRAY, JSON_OBJECT} json_type;
 
-typedef struct 
-{
-    union {
-        struct {char *s; size_t len; }s;
-        double n;
-    }u;
+typedef struct {
+    double n;
     json_type type;
 }json_value;
 
@@ -26,5 +22,6 @@ enum
 
 int json_parse(json_value*, const char*);
 json_type json_get_type(const json_value* v);
+double json_get_number(const json_value* v);
 
 #endif

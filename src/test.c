@@ -19,28 +19,39 @@ static int test_pass = 0;
     }while (0)
 
 #define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
+#define EXPECT_EQ_DOUBLE(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%.17g")
 
 #define TEST_ERROR(error, json)\
     do {\
         json_value v;\
         v.type = JSON_FALSE;\
-        EXPECT_EQ_INT(error, lept_parse(&v, json));\
-        EXPECT_EQ_INT(JSON_NULL, lept_get_type(&v));\
+        EXPECT_EQ_INT(error, json_parse(&v, json));\
+        EXPECT_EQ_INT(JSON_NULL, json_get_type(&v));\
     } while(0)
 
-static void test_parse_null()
+static void test_parse_null() 
 {
-    TEST_ERROR(JSON_PARSE_OK, "null");
+    json_value v;
+    v.type = JSON_FALSE;
+    EXPECT_EQ_INT(JSON_PARSE_OK, json_parse(&v, "null"));
+    EXPECT_EQ_INT(JSON_NULL, json_get_type(&v));
 }
 
-static void test_parse_true()
+
+static void test_parse_true() 
 {
-    TEST_ERROR(JSON_PARSE_OK, "true");
+    json_value v;
+    v.type = JSON_FALSE;
+    EXPECT_EQ_INT(JSON_PARSE_OK, json_parse(&v, "true"));
+    EXPECT_EQ_INT(JSON_TRUE, json_get_type(&v));
 }
 
-static void test_parse_false()
+static void test_parse_false() 
 {
-    TEST_ERROR(JSON_PARSE_OK, "false");
+    json_value v;
+    v.type = JSON_TRUE;
+    EXPECT_EQ_INT(JSON_PARSE_OK, json_parse(&v, "false"));
+    EXPECT_EQ_INT(JSON_FALSE, json_get_type(&v));
 }
 
 #define TEST_NUMBER(expect, json)\

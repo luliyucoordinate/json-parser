@@ -6,7 +6,7 @@
 
 #define EXPECT(c, ch)   do {assert(*c->json == (ch)); c->json++;} while(0)
 #define ISDIGIT(ch)     ((ch) >= '0' && (ch) <= '9')
-#define ISDIGIT1T09(ch) ((ch) >= '1' && (ch) <= '9')
+#define ISDIGIT1T9(ch) ((ch) >= '1' && (ch) <= '9')
 #define PUTC(c, ch)     do { *(char*)json_context_push(c, sizeof char) = (ch); } while(0)
 
 typedef struct 
@@ -26,7 +26,7 @@ static int json_parse_number(json_context* c, json_value* v) {
     if (*p == '-') p++;
     if (*p == '0') p++;
     else {
-        if (!ISDIGIT1TO9(*p)) return JSON_PARSE_INVALID_VALUE;
+        if (!ISDIGIT1T9(*p)) return JSON_PARSE_INVALID_VALUE;
         for (p++; ISDIGIT(*p); p++);
     }
     if (*p == '.') {
@@ -42,8 +42,8 @@ static int json_parse_number(json_context* c, json_value* v) {
     }
     errno = 0;
     /* \TODO validate number */
-    v->u.n = strtod(c->json, NULL);
-    if (errno == ERANGE && (v->u.n == HUGE_VAL || v->u.n == -HUGE_VAL))
+    v->n = strtod(c->json, NULL);
+    if (errno == ERANGE && (v->n == HUGE_VAL || v->n == -HUGE_VAL))
         return JSON_PARSE_NUMBER_TOO_BIG;
     c->json = p;
     v->type = JSON_NUMBER;
@@ -78,16 +78,20 @@ static int json_parse_value(json_context* c, json_value* v)
 int json_parse(json_value* v, const char* json)
 {
     json_context c;
+    int ret;
     assert(v != NULL);
     c.json = json;
     v->type = JSON_NULL;
     json_parse_whitespace(&c);
 
-    int ret;
     if ((ret = json_parse_value(&c, v)) == JSON_PARSE_OK)
     {
         json_parse_whitespace(&c);
-        if (*c.json != '\0') ret = JSON_PARSE_ROOT_NOT_SINGULAR;
+        if (*c.json != '\0') 
+        {
+            v->type = JSON_NULL;
+            ret = JSON_PARSE_ROOT_NOT_SINGULAR;
+        }
     }
     return ret;
 }
@@ -96,4 +100,10 @@ json_type json_get_type(const json_value* v)
 {
     assert(v != NULL);
     return v->type;
+}
+
+double json_get_number(const json_value* v) 
+{
+    assert(v != NULL && v->type == JSON_NUMBER);
+    return v->n;
 }
